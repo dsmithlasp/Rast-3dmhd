@@ -1,11 +1,15 @@
 #FC     =       ifort
-FC	=	mpif90
-FFLAGS  =       -O2
+#FC	=	mpif90
+FC	=	ftn
+# gcc:
+FFLAGS  =       -O2 -std=legacy -ffixed-form
+# intel:
+#FFLAGS =       -O2 -g -traceback
 #FFLAGS =       -O2 -pad -ip -unroll -align -w -i-static -opt-report
 #LMPI   =       -lmpichf90 -lmpichfarg -lmpich -L/lib64 -libt -lpublic -lmpicm -lmtl_common -lvapi -lmpga -lmosal -lpthread
-LMPI    =       -lmpichf90
-IDIR    =       -I/coral/local/mpich64/include
-LDIR    =       -L/coral/local/mpich64/lib64
+LMPI    =       #-lmpichf90
+IDIR    =       #-I/coral/local/mpich64/include
+LDIR    =       #-L/coral/local/mpich64/lib64
 
 BIN 	=	 3dmhd.exe
  

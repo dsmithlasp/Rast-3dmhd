@@ -1681,6 +1681,7 @@ C----------------------------------------------------------------------
                  CALL MPI_SEND(FRADM(ILAP/2+1),1,MPISIZE,
      2                    MYPE-NPEY,ITAG,MPI_COMM_WORLD,IERR)
               ELSE
+C                print*, "pt 1 mype, npey", mype, npey
                  CALL MPI_SENDRECV(FRADM(ILAP/2+1),1,MPISIZE,
      2                    MYPE-NPEY,ITAG,FRADM(NZ),1,MPISIZE,
      3                    MYPE+NPEY,ITAG,MPI_COMM_WORLD,ISTATUS,IERR)
@@ -3045,6 +3046,7 @@ C----------------------------------------------------------------------
               CALL MPI_RECV(VAR(1,1,1),NX*NY*(ILAP/2),MPISIZE,MYPE-NPEY,
      2                     ITAG,MPI_COMM_WORLD,ISTATUS,IERR)
            ELSE
+C              print*, "pt 2 mype, npey", mype, npey
               CALL MPI_SENDRECV(VAR(1,1,NZ-ILAP+1),NX*NY*(ILAP/2),
      2                    MPISIZE,MYPE+NPEY,ITAG,VAR(1,1,1),
      3                    NX*NY*(ILAP/2),MPISIZE,MYPE-NPEY,ITAG,
@@ -3059,6 +3061,7 @@ C
               CALL MPI_SEND(VAR(1,1,ILAP/2+1),NX*NY*(ILAP/2),MPISIZE,
      2                    MYPE-NPEY,ITAG,MPI_COMM_WORLD,IERR)
            ELSE
+C                print*, "pt 3 mype, npey", mype, npey
               CALL MPI_SENDRECV(VAR(1,1,ILAP/2+1),NX*NY*(ILAP/2),
      2                    MPISIZE,MYPE-NPEY,ITAG,VAR(1,1,NZ-ILAP/2+1),
      3                    NX*NY*(ILAP/2),MPISIZE,MYPE+NPEY,ITAG,
@@ -3077,6 +3080,7 @@ C----------------------------------------------------------------------
               CALL MPI_RECV(VAR(:,1:IY/2,:),NX*NZ*(IY/2),MPISIZE,
      2                    MYPE-1,ITAG,MPI_COMM_WORLD,ISTATUS,IERR)
            ELSE
+C                print*, "pt 4 mype, npey", mype, npey
               CALL MPI_SENDRECV(VAR(:,NY-IY+1:NY-IY/2,:),NX*NZ*(IY/2),
      2                    MPISIZE,MYPE+1,ITAG,VAR(:,1:IY/2,:),
      3                    NX*NZ*(IY/2),MPISIZE,MYPE-1,ITAG,
@@ -3091,6 +3095,7 @@ C
               CALL MPI_SEND(VAR(:,IY/2+1:IY,:),NX*NZ*(IY/2),MPISIZE,
      2                    MYPE-1,ITAG,MPI_COMM_WORLD,IERR)
            ELSE
+C                print*, "pt 5 mype, npey", mype, npey
               CALL MPI_SENDRECV(VAR(:,IY/2+1:IY,:),NX*NZ*(IY/2),
      2                    MPISIZE,MYPE-1,ITAG,VAR(:,NY-IY/2+1:NY,:),
      3                    NX*NZ*(IY/2),MPISIZE,MYPE+1,ITAG,
@@ -3669,7 +3674,7 @@ c      REAL dss,h(JMAXP),s(JMAXP)
       do 11 j=1,JMAX
         call trapzd(func,a,b,s(j),j)
         if (j.ge.K) then
-          call polint(h(j-KM),s(j-KM),K,0.,ss,dss)
+          call polint(h(j-KM),s(j-KM),K,0.0d0,ss,dss)
           if (abs(dss).le.EPS*abs(ss)) return
         endif
         s(j+1)=s(j)
