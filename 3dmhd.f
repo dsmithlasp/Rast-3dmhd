@@ -89,8 +89,8 @@ C----------------------------------------------------------------------
 	WRITE(*,'("MYPE ",I3," MYPEY ",I3," MYPEZ ",I3)') MYPE,MYPEY,
      2     MYPEZ
 C
-c	IF (IWORD.EQ.8) THEN
-	IF (IWORD.EQ.2) THEN
+	IF (IWORD.EQ.8) THEN
+c	IF (IWORD.EQ.2) THEN
 		MPISIZE=MPI_DOUBLE_PRECISION
 	ELSE
 		MPISIZE=MPI_FLOAT
