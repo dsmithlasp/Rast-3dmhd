@@ -4,6 +4,8 @@
 
 git clone https://github.com/dsmithlasp/Rast-3dmhd
 
+Feel free to reach out to me for questions Doug.Smith@lasp.colorado.edu
+
 Source code consists of 5 files
 The fortran code files
   3dmhd.f
