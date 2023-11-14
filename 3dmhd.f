@@ -229,8 +229,15 @@ C
 	ELSE
 		RKAPST=(POLYS+1.0E00)*THETA/GRAV
 	ENDIF
-	ORM=1.0E00/RM
-	OBETA=2.0E00/BETA
+c sleak: orm is only used if lmag is true:
+c         obeta too, i think
+       if (LMAG) then
+	  ORM=1.0E00/RM
+   	  OBETA=2.0E00/BETA
+       else
+      ORM=0.0
+      obeta=0.0
+      endif
 C----------------------------------------------------------------------
 C  Zero clock.
 C----------------------------------------------------------------------

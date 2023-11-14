@@ -1209,6 +1209,11 @@ C
      6           ,SP26(IPAD)
 C
         DIMENSION ISTATUS(MPI_STATUS_SIZE)
+c sleak: fix common block size mismatch for splinex and spliney
+ 	DIMENSION KLOX(NPX+3),KHIX(NPX+3),HHX(NPX+3),SIGX(NPX),
+     2		  AAX(NPX+3),BBX(NPX+3),XPINV(NPX)
+        DIMENSION KLOY(NRY+3),KHIY(NRY+3),HHY(NRY+3),SIGY(NRY),
+     2            AAY(NRY+3),BBY(NRY+3),YPINV(NRY)
 C
         COMMON/BIG/RU,SP1,RV,SP2,RW,SP3,RO,SP4,TT,SP5,UU,SP6,VV,SP7,WW
      2            ,SP8,FU,SP9,FV,SP10,FW,SP11,FR,SP12,FT,SP13
@@ -4009,6 +4014,8 @@ C *** dimension declarations for the padding in /BIG/ ***
 C
      5           ,SP21(IPAD),SP22(IPAD),SP23(IPAD),SP24(IPAD),SP25(IPAD)
      6           ,SP26(IPAD)
+c sleak try to fix mismatch common block size warning:
+	DIMENSION RKAPA(NZ),DKAPA(NZ)
 C
 C *** common block /BIG/ contains everything ***
         COMMON/BIG/RU,SP1,RV,SP2,RW,SP3,RO,SP4,TT,SP5,UU,SP6,VV,SP7,WW
