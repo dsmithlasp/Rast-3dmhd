@@ -1,8 +1,7 @@
-#FC     =       ifort
-#FC	=	mpif90
-FC	=	ftn
+FC	=	mpif90
 # gcc:
-FFLAGS  =       -O2 -std=legacy -ffixed-form
+FFLAGS  = -g -O2 -std=legacy -ffixed-form 
+#FFLAGS  = -g -fbacktrace -O2 -std=legacy -ffixed-form -ffpe-trap=overflow,underflow,zero,denormal
 # intel:
 #FFLAGS =       -O2 -g -traceback
 #FFLAGS =       -O2 -pad -ip -unroll -align -w -i-static -opt-report
