@@ -362,7 +362,7 @@ C
 	    ENDIF
 	ENDIF
 C
-        CALL COMMUNICATE
+        CALL COMMUNICATE_CPU
 C----------------------------------------------------------------------
 C  Calculate dt. Fully ionized H specific heats.
 C  CV is nondimensional and is equal to Cv*mu/R = 1/(gamma-1)  
@@ -907,6 +907,9 @@ c  clear and start the counters
 cc        call  perfctr_start(isel0, isel1, isel2)
 c
 c!       stop 'loop'
+C$acc data copy(bx,by,bz,d2xxdx2,d2yydy2,d2zzdz2,ddx,ddy,ddz,dkapa,dxxdx&
+C$acc&,dyydy,dzzdz,exx,fr,ft,fu,fv,fw,rkapa,ro,ru,rv,rw,tt,uu,vv,ww,ww1,&
+C$acc&ww2,ww3,wyy,zbx,zby,zbz,zee,zro,zru,zrv,zrw,ztt)
 	DO 1000 NK=NBEG,NTOTAL	
 C
 	CALL STEP
@@ -936,22 +939,29 @@ C
      1                  ,FORM='UNFORMATTED'
      2			,ACCESS='DIRECT',RECL=IWORD*(NX-IX)*(NY-IY)
      3							 *(NZ-ILAP))
-C
+C$acc update self(ru(2:nx-ix+1,2:ny-iy+1,ilap/2+1:nz-ilap/2))
 		WRITE(10,REC=ISTRT0+1)RU(2:NX-IX+1,2:NY-IY+1
      2						  ,ILAP/2+1:NZ-ILAP/2)
+C$acc update self(rv(2:nx-ix+1,2:ny-iy+1,ilap/2+1:nz-ilap/2))
 		WRITE(10,REC=ISTRT0+2)RV(2:NX-IX+1,2:NY-IY+1
      2						  ,ILAP/2+1:NZ-ILAP/2)
+C$acc update self(rw(2:nx-ix+1,2:ny-iy+1,ilap/2+1:nz-ilap/2))
 		WRITE(10,REC=ISTRT0+3)RW(2:NX-IX+1,2:NY-IY+1
      2						  ,ILAP/2+1:NZ-ILAP/2)
+C$acc update self(tt(2:nx-ix+1,2:ny-iy+1,ilap/2+1:nz-ilap/2))
 		WRITE(10,REC=ISTRT0+4)TT(2:NX-IX+1,2:NY-IY+1
      2						  ,ILAP/2+1:NZ-ILAP/2)
+C$acc update self(ro(2:nx-ix+1,2:ny-iy+1,ilap/2+1:nz-ilap/2))
 		WRITE(10,REC=ISTRT0+5)RO(2:NX-IX+1,2:NY-IY+1
      2						  ,ILAP/2+1:NZ-ILAP/2)
 		IF (LMAG) THEN
+C$acc update self(bx(2:nx-ix+1,2:ny-iy+1,ilap/2+1:nz-ilap/2))
 			WRITE(10,REC=ISTRT0+6)BX(2:NX-IX+1,2:NY-IY+1
      2                                            ,ILAP/2+1:NZ-ILAP/2)
+C$acc update self(by(2:nx-ix+1,2:ny-iy+1,ilap/2+1:nz-ilap/2))
                 	WRITE(10,REC=ISTRT0+7)BY(2:NX-IX+1,2:NY-IY+1
      2                                            ,ILAP/2+1:NZ-ILAP/2)
+C$acc update self(bz(2:nx-ix+1,2:ny-iy+1,ilap/2+1:nz-ilap/2))
                 	WRITE(10,REC=ISTRT0+8)BZ(2:NX-IX+1,2:NY-IY+1
      2                                            ,ILAP/2+1:NZ-ILAP/2)
 		ENDIF
@@ -1051,6 +1061,7 @@ C
 	STOP
 C
 5010	CONTINUE
+C$acc end data
 	KSTRT0 = NDUMP0
         IF (LMAG) THEN
                 ISTRT0 = 8*NDUMP0
