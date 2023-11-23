@@ -744,6 +744,7 @@ C----------------------------------------------------------------------
 	OGAMMA=1.0E00/GAMMA
 C
 c        UU=SQRT((RU**2+RV**2+RW**2)/RO**2)
+C$acc kernels
         DO 10 K=ILAP/2+1,NZ-ILAP/2
         DO 10 J=2,NY-IY+1
         DO 10 I=2,NX-IX+1
@@ -758,10 +759,12 @@ c        UMACH=MAXVAL(UU/VV)
         DO 20 I=2,NX-IX+1
 		UMACH=MAX(UMACH,OGAMMA*UU(I,J,K)/TT(I,J,K))
 20      CONTINUE
+C$acc end kernels
 	UMACH=SQRT(UMACH)
 C
 c        VMAX=MAXVAL(UU+VV)
 	IF (LMAG) THEN
+C$acc kernels
 	     DO 30 K=ILAP/2+1,NZ-ILAP/2
              DO 30 J=2,NY-IY+1
              DO 30 I=2,NX-IX+1
@@ -777,7 +780,9 @@ c        VMAX=MAXVAL(UU+VV)
      1                                          +BZ(I,J,K)*BZ(I,J,K))
      2						    *OBETA/RO(I,J,K)))
 30           CONTINUE
+C$acc end kernels
 	ELSE
+C$acc kernels
        	     DO 40 K=ILAP/2+1,NZ-ILAP/2
        	     DO 40 J=2,NY-IY+1
        	     DO 40 I=2,NX-IX+1
@@ -785,13 +790,16 @@ c        VMAX=MAXVAL(UU+VV)
      2		   	     	     +2.0E00*SQRT(UU(I,J,K)
      3					     *GAMMA*TT(I,J,K))
 40	     CONTINUE
+C$acc end kernels
 	ENDIF
+C$acc kernels
         DO 50 K=ILAP/2+1,NZ-ILAP/2
         DO 50 J=2,NY-IY+1
         DO 50 I=2,NX-IX+1
                 VMAX=MAX(VMAX,UU(I,J,K))
 		RMIN=MIN(RMIN,RO(I,J,K))
 50      CONTINUE
+C$acc end kernels
         VMAX=SQRT(VMAX)
 C
 	CALL  MPI_ALLREDUCE(UMACH,WMOUT,1,MPISIZE,MPI_MAX,
@@ -832,6 +840,7 @@ C----------------------------------------------------------------------
 C----------------------------------------------------------------------
 C  Find the pointwise minimum timestep.
 C----------------------------------------------------------------------
+C$acc kernels
 	DO 2 K=ILAP/2+1,NZ-ILAP/2
         DO 2 J=2,NY-IY+1
         DO 2 I=2,NX-IX+1
@@ -863,6 +872,7 @@ C
 	     WMIN(4)=MINVAL(VV(2:NX-IX+1,2:NY-IY+1,ILAP/2+1:NZ-ILAP/2))
 	     MINCNT=4
 	ENDIF
+C$acc end kernels
 	CALL MPI_ALLREDUCE(WMIN,WMOUT,MINCNT,MPISIZE,MPI_MIN,
      2			   MPI_COMM_WORLD,IERR)
         IF (LMAG) THEN
@@ -878,6 +888,7 @@ C  Equations with One Infinite and Two Periodic Directions,
 C  J. Comp. Phys., 96 297-324 1991).
 C  Calculate the first Runge-Kutta substep.
 C----------------------------------------------------------------------	
+C$acc kernels
         DO 71 K=ILAP/2+1,NZ-ILAP/2
         DO 71 J=2,NY-IY+1
         DO 71 I=2,NX-IX+1
@@ -903,7 +914,9 @@ C----------------------------------------------------------------------
         DO 111 I=2,NX-IX+1
                 ZTT(I,J,K)=TT(I,J,K)
 111     CONTINUE
+C$acc end kernels
         IF (LMAG) THEN
+C$acc kernels
                 DO 121 K=ILAP/2+1,NZ-ILAP/2
                 DO 121 J=2,NY-IY+1
                 DO 121 I=2,NX-IX+1
@@ -919,12 +932,14 @@ C----------------------------------------------------------------------
                 DO 141 I=2,NX-IX+1
                         ZBZ(I,J,K)=BZ(I,J,K)
 141             CONTINUE
+C$acc end kernels
         ENDIF
 C
 	CALL FLUXES
 C
 	COEF=GAM1*DT
 C
+C$acc kernels
 	DO 70 K=ILAP/2+1,NZ-ILAP/2
         DO 70 J=2,NY-IY+1
         DO 70 I=2,NX-IX+1
@@ -950,7 +965,9 @@ C
         DO 110 I=2,NX-IX+1
                 TT(I,J,K)=ZTT(I,J,K)+COEF*FT(I,J,K)
 110     CONTINUE
+C$acc end kernels
 	IF (LMAG) THEN
+C$acc kernels
         	DO 120 K=ILAP/2+1,NZ-ILAP/2
         	DO 120 J=2,NY-IY+1
         	DO 120 I=2,NX-IX+1
@@ -966,6 +983,7 @@ C
         	DO 140 I=2,NX-IX+1
                		BZ(I,J,K)=ZBZ(I,J,K)+COEF*WW3(I,J,K)
 140     	CONTINUE
+C$acc end kernels
 	ENDIF
 C
         CALL BCON
@@ -976,6 +994,7 @@ C   Calculate second Runge-Kutta substep.
 C----------------------------------------------------------------------
 	COEF=ZETA1*DT
 C
+C$acc kernels
 	DO 190 K=ILAP/2+1,NZ-ILAP/2
         DO 190 J=2,NY-IY+1
         DO 190 I=2,NX-IX+1
@@ -1001,7 +1020,9 @@ C
         DO 230 I=2,NX-IX+1
                 ZTT(I,J,K)=TT(I,J,K)+COEF*FT(I,J,K)
 230     CONTINUE
+C$acc end kernels
         IF (LMAG) THEN
+C$acc kernels
                 DO 240 K=ILAP/2+1,NZ-ILAP/2
                 DO 240 J=2,NY-IY+1
                 DO 240 I=2,NX-IX+1
@@ -1017,12 +1038,14 @@ C
                 DO 260 I=2,NX-IX+1
                         ZBZ(I,J,K)=BZ(I,J,K)+COEF*WW3(I,J,K)
 260             CONTINUE
+C$acc end kernels
         ENDIF
 C	
 	CALL FLUXES
 C	
 	COEF=GAM2*DT
 C
+C$acc kernels
         DO 270 K=ILAP/2+1,NZ-ILAP/2
         DO 270 J=2,NY-IY+1
         DO 270 I=2,NX-IX+1
@@ -1048,7 +1071,9 @@ C
         DO 310 I=2,NX-IX+1
                 TT(I,J,K)=ZTT(I,J,K)+COEF*FT(I,J,K)
 310      CONTINUE
+C$acc end kernels
 	IF (LMAG) THEN
+C$acc kernels
 		DO 320 K=ILAP/2+1,NZ-ILAP/2
         	DO 320 J=2,NY-IY+1
         	DO 320 I=2,NX-IX+1
@@ -1064,6 +1089,7 @@ C
                 DO 340 I=2,NX-IX+1
                         BZ(I,J,K)=ZBZ(I,J,K)+COEF*WW3(I,J,K)
 340      	CONTINUE
+C$acc end kernels
 	ENDIF
 C
 	CALL BCON
@@ -1074,6 +1100,7 @@ C   Calculate third Runge-Kutta substep.
 C----------------------------------------------------------------------
         COEF=ZETA2*DT
 C
+C$acc kernels
         DO 390 K=ILAP/2+1,NZ-ILAP/2
         DO 390 J=2,NY-IY+1
         DO 390 I=2,NX-IX+1
@@ -1099,7 +1126,9 @@ C
         DO 430 I=2,NX-IX+1
                 ZTT(I,J,K)=TT(I,J,K)+COEF*FT(I,J,K)
 430     CONTINUE
+C$acc end kernels
         IF (LMAG) THEN
+C$acc kernels
                 DO 440 K=ILAP/2+1,NZ-ILAP/2
                 DO 440 J=2,NY-IY+1
                 DO 440 I=2,NX-IX+1
@@ -1115,12 +1144,14 @@ C
                 DO 460 I=2,NX-IX+1
                         ZBZ(I,J,K)=BZ(I,J,K)+COEF*WW3(I,J,K)
 460             CONTINUE
+C$acc end kernels
         ENDIF
 C
 	CALL FLUXES
 C
         COEF=GAM3*DT
 C
+C$acc kernels
         DO 470 K=ILAP/2+1,NZ-ILAP/2
         DO 470 J=2,NY-IY+1
         DO 470 I=2,NX-IX+1
@@ -1146,7 +1177,9 @@ C
         DO 510 I=2,NX-IX+1
                 TT(I,J,K)=ZTT(I,J,K)+COEF*FT(I,J,K)
 510      CONTINUE
+C$acc end kernels
         IF (LMAG) THEN
+C$acc kernels
                 DO 520 K=ILAP/2+1,NZ-ILAP/2
                 DO 520 J=2,NY-IY+1
                 DO 520 I=2,NX-IX+1
@@ -1162,6 +1195,7 @@ C
                 DO 540 I=2,NX-IX+1
                         BZ(I,J,K)=ZBZ(I,J,K)+COEF*WW3(I,J,K)
 540             CONTINUE
+C$acc end kernels
         ENDIF
 C
         CALL BCON
@@ -1250,6 +1284,7 @@ c       FR=(CSHIFT(RU,1,1)-CSHIFT(RU,-1,1))*HX*DXXDX
 c       FR=-FR
 c	WW1=(CSHIFT(RV,1,2)-CSHIFT(RV,-1,2))*HY*DYYDY
         IF ((IXC.EQ.0).AND.(IYC.EQ.0)) THEN
+C$acc kernels
 		DO 10 K=ILAP/2+1,NZ-ILAP/2
 		DO 10 J=2,NY-IY+1
 			TMPY=HY*DYYDY(J)
@@ -1259,35 +1294,45 @@ c	WW1=(CSHIFT(RV,1,2)-CSHIFT(RV,-1,2))*HY*DYYDY
 			FR(I,J,K)=FR(I,J,K)-(RV(I,J+1,K)-RV(I,J-1,K))
      2								*TMPY
 10		CONTINUE
+C$acc end kernels
 	ELSE
 		WRITE(6,*)'FLUXES: Non-periodic horizontal boundaries'
 		CALL MPI_FINALIZE(IERR)
 		STOP
 	ENDIF
 c       WW1=(CSHIFT(RW,1,3)-CSHIFT(RW,-1,3))*HZ*DZZDZ
+C$acc kernels
         DO 40 K=ILAP/2+1,NZ-ILAP/2
 		TMPZ=HZ*DZZDZ(K)
         DO 40 J=2,NY-IY+1
         DO 40 I=2,NX-IX+1
                 WW1(I,J,K)=(RW(I,J,K+1)-RW(I,J,K-1))*TMPZ
 40      CONTINUE
+C$acc end kernels
         IF (MYPEZ.EQ.0) THEN
+C$acc update self(dzzdz)
 		TMPZ=HZ*DZZDZ(ILAP/2+1)
+C$acc kernels
         	DO 50 J=2,NY-IY+1
         	DO 50 I=2,NX-IX+1
                 	WW1(I,J,ILAP/2+1)=(4.0E00*RW(I,J,ILAP/2+2)
      2			      		   -RW(I,J,ILAP/2+3))*TMPZ
 50              CONTINUE
+C$acc end kernels
 	ENDIF
         IF (MYPEZ.EQ.NPEZ-1) THEN
+C$acc update self(dzzdz)
 		TMPZ=HZ*DZZDZ(NZ-ILAP/2)
+C$acc kernels
 		DO 60 J=2,NY-IY+1
 		DO 60 I=2,NX-IX+1
                 	WW1(I,J,NZ-ILAP/2)=(RW(I,J,NZ-ILAP/2-2)
      2                  	-4.0E00*RW(I,J,NZ-ILAP/2-1))*TMPZ
 60		CONTINUE
+C$acc end kernels
         ENDIF
 c       FR=FR-WW1
+C$acc kernels
 	DO 70 K=ILAP/2+1,NZ-ILAP/2
 	DO 70 J=2,NY-IY+1
 	DO 70 I=2,NX-IX+1
@@ -1298,21 +1343,28 @@ C  Diffusion of density perturbations. Density ghost points loaded by
 C  mirror points so that diffusion on boundary is centered to avoid
 C  forward/backward difference instability (ITP Santa Barbara).
 C----------------------------------------------------------------------
+C$acc end kernels
         IF ((ID.NE.0).OR.LREM) THEN
 	     IF (MYPEZ.EQ.0) THEN
+C$acc kernels
             	RO(:,:,1:ILAP/2)=RO(:,:,ILAP/2+2:ILAP+1)
+C$acc end kernels
 	     ENDIF
 	     IF (MYPEZ.EQ.NPEZ-1) THEN
+C$acc kernels
 	    	RO(:,:,NZ-ILAP/2+1:NZ)=RO(:,:,NZ-ILAP:NZ-ILAP/2-1)
+C$acc end kernels
 	     ENDIF
 C
 	     CALL HORIZONTAL_MEAN(ROM,RO)
 C
+C$acc kernels
              DO 9120 K=1,NZ
              DO 9120 J=1,NY
              DO 9120 I=1,NX
                    WW1(I,J,K)=RO(I,J,K)-ROM(K)
 9120         CONTINUE
+C$acc end kernels
 	ENDIF
         IF (ID.NE.0) THEN
 C-----------------------------------------------------------------------
@@ -1325,9 +1377,11 @@ C-----------------------------------------------------------------------
              IF (ID.EQ.2) THEN
                 SGM=0.1E00
                 CLN=-4.0E00*LOG(2.0E00)/SGM/SGM
+C$acc update self(zee)
                 WWZ=EXP(CLN*ZEE**2)+EXP(CLN*(ZEE-ZMAX)**2)
              ENDIF
         IF (DH.NE.0.0E00) THEN
+C$acc kernels
              DO 9130 K=ILAP/2+1,NZ-ILAP/2
              DO 9130 J=2,NY-IY+1
              DO 9130 I=2,NX-IX+1
@@ -1350,8 +1404,10 @@ C-----------------------------------------------------------------------
              DO 9140 I=2,NX-IX+1
                 FR(I,J,K)=FR(I,J,K)+(WW2(I,J,K)+WW3(I,J,K))*TMP
 9140         CONTINUE
+C$acc end kernels
         ENDIF
         IF (DV.NE.0.0E00) THEN
+C$acc kernels
                DO 9145 K=ILAP/2+1,NZ-ILAP/2
 		   TMPZ1=HZ*D2ZZDZ2(K)
 		   TMPZ2=H2Z*DZZDZ(K)*DZZDZ(K)
@@ -1367,12 +1423,14 @@ C-----------------------------------------------------------------------
              DO 9150 I=2,NX-IX+1
                 FR(I,J,K)=FR(I,J,K)+WW2(I,J,K)*TMP
 9150         CONTINUE
+C$acc end kernels
         ENDIF
         ENDIF
 C----------------------------------------------------------------------
 C  Calculate forces.  Buoyancy ...
 C----------------------------------------------------------------------
 c	FW=GRAV*RO
+C$acc kernels
 	DO 80 K=ILAP/2+1,NZ-ILAP/2
 	DO 80 J=2,NY-IY+1
 	DO 80 I=2,NX-IX+1
@@ -1480,6 +1538,7 @@ c       FW=FW-(CSHIFT(WW1,1,2)-CSHIFT(WW1,-1,2))*HZ*DZZDZ
                 FW(I,J,K)=FW(I,J,K)-(RW(I,J,K+1)*WW(I,J,K+1)
      2                              -RW(I,J,K-1)*WW(I,J,K-1))*TMPZ
 330      CONTINUE
+C$acc end kernels
 C----------------------------------------------------------------------
 C  Calculate energy fluxes.  Advection ...
 C----------------------------------------------------------------------
@@ -1492,6 +1551,7 @@ c	FT=FT-VV*WW3
 C
 	IF (.NOT.LSHR) THEN
 C
+C$acc kernels
         DO 450 K=ILAP/2+1,NZ-ILAP/2
 		TMPZ=HZ*DZZDZ(K)
         DO 450 J=2,NY-IY+1
@@ -1504,6 +1564,7 @@ C
 		FT(I,J,K)=FT(I,J,K)-WW(I,J,K)*(TT(I,J,K+1)-TT(I,J,K-1))
      2								  *TMPZ
 450      CONTINUE
+C$acc end kernels
 C----------------------------------------------------------------------
 C  Diffusion ...
 C----------------------------------------------------------------------
@@ -1522,6 +1583,7 @@ C  Calculate horizontal mean temperature and temperature perturbations.
 C----------------------------------------------------------------------
 		CALL HORIZONTAL_MEAN(TTM,TT)
 C
+C$acc kernels
            DO K=1,NZ
               DO J=1,NY
                  DO I=1,NX
@@ -1529,6 +1591,7 @@ C
                  END DO
               END DO
            END DO
+C$acc end kernels
 	ENDIF
 C
 	ENDIF
@@ -1538,6 +1601,7 @@ C----------------------------------------------------------------------
 C  Diffuse only temeprature perturbations (M. Rempel)
 C----------------------------------------------------------------------
 		TMP=OCV/REPR
+C$acc kernels
                 DO 518 K=ILAP/2+1,NZ-ILAP/2
                         TMPZ1=HZ*D2ZZDZ2(K)
                         TMPZ2=H2Z*DZZDZ(K)*DZZDZ(K)
@@ -1579,9 +1643,11 @@ C----------------------------------------------------------------------
 		END DO
 		END DO
 		END DO
+C$acc end kernels
 C----------------------------------------------------------------------
 	ELSE
 		TMP=OCV/REPR
+C$acc kernels
 		DO 519 K=ILAP/2+1,NZ-ILAP/2
 			TMPZ1=HZ*D2ZZDZ2(K)
 			TMPZ2=H2Z*DZZDZ(K)*DZZDZ(K)
@@ -1608,6 +1674,7 @@ C----------------------------------------------------------------------
      			FT(I,J,K)=FT(I,J,K)+(TT(I,J,K+1)-TT(I,J,K-1))
      2				    *HZ*DZZDZ(K)*RO(I,J,K)*TMP*DKAPA(K)
 519      	CONTINUE
+C$acc end kernels
 	ENDIF
 C----------------------------------------------------------------------
 C  Flux relaxation (M. Rempel).
@@ -1647,6 +1714,7 @@ C
 C----------------------------------------------------------------------
 C  Compute mean convective and radiative flux.
 C----------------------------------------------------------------------
+C$acc kernels
               DO K=ILAP/2+1,NZ
                  DO J=1+IY/2,NY-IY+1
                     DO I=1+IX/2,NX-IX/2
@@ -1658,18 +1726,23 @@ C----------------------------------------------------------------------
                  END DO
               END DO
 C    
+C$acc end kernels
               CALL HORIZONTAL_MEAN(FCONM,WW2)
 C    
+C$acc kernels
               DO K=ILAP/2+1,NZ-ILAP/2
                  FRADM(K)=(TTM(K+1)-TTM(K-1))
      2                *HZ*DZZDZ(K)*RKAPA(K)/REPR
               END DO
+C$acc end kernels
               IF (MYPEZ.EQ.0) THEN
+C$acc update self(dzzdz,rkapa)
                  FRADM(ILAP/2+1)=(-3.0*TTM(ILAP/2+1)+4.0*TTM(ILAP/2+2)
      2                -TTM(ILAP/2+3))*HZ*DZZDZ(ILAP/2+1)
      3                *RKAPA(ILAP/2+1)/REPR
               ENDIF
               IF (MYPEZ.EQ.NPEZ-1) THEN
+C$acc update self(dzzdz,rkapa)
                  FRADM(NZ-ILAP/2)=(3.0*TTM(NZ-ILAP/2)
      2                -4.0*TTM(NZ-ILAP/2-1)
      3                +TTM(NZ-ILAP/2-2))*HZ*DZZDZ(NZ-ILAP/2)
@@ -1698,18 +1771,22 @@ C
                  FTOT=THETA/REPR
               ENDIF
 C
+C$acc kernels
               DO K=ILAP/2+1,NZ
                  ALPHA(K) = 1.0-(FCONM(K)+FRADM(K))/FTOT
               END DO
               DO K=ILAP/2+1,NZ
                  ALPHA(K)=ALPHA(K)/(1.0+4.0*ABS(ALPHA(K)))
               END DO
+C$acc end kernels
               CORRECT(ILAP/2+1)=0.0
+C$acc kernels
               DO K=ILAP/2+2,NZ
                  CORRECT(K)=CORRECT(K-1)+0.5*(ALPHA(K)+ALPHA(K-1))
      2                     *(ZEE(K)-ZEE(K-1))
               END DO
 C
+C$acc end kernels
               IF(MYPEY.EQ.0) THEN
                  ENDVAL(MYPEZ+1)=CORRECT(NZ)
 C
@@ -1731,30 +1808,39 @@ C
               SUM=0.0
               IF((ITC.EQ.0).AND.(IZC.EQ.1)) THEN
                  IF(MYPEZ.GT.0) THEN
+C$acc kernels
                     DO IPE=1,MYPEZ
                        SUM=SUM+ADDSUM(IPE)
                     END DO
+C$acc end kernels
                  END IF
               ELSE IF((ITC.EQ.1).AND.(IZC.EQ.0)) THEN
+C$acc kernels
                  DO IPE=NPEZ-1,MYPEZ,-1
                     SUM=SUM-ADDSUM(IPE+1)
                     SUM=SUM-ADDSUM(IPE+1)
                  END DO
+C$acc end kernels
               ELSE
                  WRITE(6,*)'Relax: check boundary temperature.'
                  CALL MPI_FINALIZE(IERR)
                  STOP
               END IF
 C
+C$acc kernels
               DO K=ILAP/2+1,NZ-ILAP/2
                  CORRECT(K)=CORRECT(K)+SUM
               END DO
+C$acc end kernels
            ELSE
+C$acc kernels
              DO K=ILAP/2+1,NZ-ILAP/2
                 CORRECT(K) = 0.0
              END DO
+C$acc end kernels
           ENDIF
 C
+C$acc kernels
           DO K=ILAP/2+1,NZ-ILAP/2
              DO J=1+IY/2,NY-IY+1
                 DO I=1+IX/2,NX-IX/2
@@ -1762,15 +1848,18 @@ C
                 END DO
              END DO
           END DO
+C$acc end kernels
 C----------------------------------------------------------------------
 C  Write progress of relaxation in output file every 25 time steps.
 C----------------------------------------------------------------------
           IF((MOD(TIMT,25.0).LE.DT).AND.(MOD(ICALL,3).EQ.0)) THEN
              IF((ITC.EQ.0).AND.(IZC.EQ.1).AND.(MYPE.EQ.NPE-1)) THEN
+C$acc update self(correct(nz-ilap/2),ttm(nz-ilap/2))
                 WRITE(*,'(A7,5(D15.6))') 'Relax: ',TIMT,TFAC,
      &               CORRECT(NZ-ILAP/2),TTM(NZ-ILAP/2),TTM_MAX
              ENDIF
              IF((ITC.EQ.1).AND.(IZC.EQ.0).AND.(MYPE.EQ.0)) THEN
+C$acc update self(correct(ilap/2+1),ttm(ilap/2+1))
                 WRITE(*,'(A7,5(D15.6))') 'Relax: ',TIMT,TFAC,
      &               CORRECT(ILAP/2+1),TTM(ILAP/2+1),TTM_MIN
              ENDIF
@@ -1783,6 +1872,7 @@ C----------------------------------------------------------------------
         IF (ITC.EQ.2) THEN
             CLN=-4.0E00*LOG(2.0E00)/HH/HH
             IF (TC.NE.0.0E00) THEN
+C$acc kernels
                 DO 521 K=ILAP/2+1,NZ-ILAP/2
                 DO 521 J=2,NY-IY+1
                 DO 521 I=2,NX-IX+1
@@ -1793,7 +1883,9 @@ C----------------------------------------------------------------------
      4                         		*EXP(CLN*(WYY(J)-YP)**2)/HH
      5                         		*EXP(CLN*(ZEE(K)-ZP)**2)/HH
 521             CONTINUE
+C$acc end kernels
             ELSE
+C$acc kernels
                 DO 522 K=ILAP/2+1,NZ-ILAP/2
                 DO 522 J=2,NY-IY+1
                 DO 522 I=2,NX-IX+1
@@ -1802,6 +1894,7 @@ C----------------------------------------------------------------------
      3                                  *EXP(CLN*(WYY(J)-YP)**2)/HH
      4                                  *EXP(CLN*(ZEE(K)-ZP)**2)/HH
 522             CONTINUE
+C$acc end kernels
             ENDIF
         ENDIF
 C----------------------------------------------------------------------
@@ -1815,6 +1908,7 @@ c     2    +(CSHIFT(UU,1,2)-2.0E00*UU+CSHIFT(UU,-1,2))*H2Y*DYYDY*DYYDY
 c	WW1=WW1+(CSHIFT(UU,1,3)-CSHIFT(UU,-1,3))*HZ*D2ZZDZ2
 c     2     +(CSHIFT(UU,1,3)-2.0E00*UU+CSHIFT(UU,-1,3))*H2Z*DZZDZ*DZZDZ
 c	FU=FU+WW1*ORE
+C$acc kernels
         DO 530 K=ILAP/2+1,NZ-ILAP/2
 		TMPZ1=HZ*D2ZZDZ2(K)
 		TMPZ2=H2Z*DZZDZ(K)*DZZDZ(K)
@@ -1900,16 +1994,20 @@ c       WW2=(CSHIFT(VV,1,1)-CSHIFT(VV,-1,1))*HX*DXXDX
                 WW2(I,J,K)=(VV(I+1,J,K)-VV(I-1,J,K))*HX*DXXDX(I)
 670     CONTINUE
 C
+C$acc end kernels
 	IF (.NOT.LSHR) THEN
 C
 c       WW3=(CSHIFT(WW,1,1)-CSHIFT(WW,-1,1))*HX*DXXDX
+C$acc kernels
         DO 690 K=ILAP/2+1,NZ-ILAP/2
         DO 690 J=2,NY-IY+1
         DO 690 I=2,NX-IX+1
                 WW3(I,J,K)=(WW(I+1,J,K)-WW(I-1,J,K))*HX*DXXDX(I)
 690     CONTINUE
 c       FT=FT+(C43*WW1*WW1+WW2*WW2+WW3*WW3)*RO*OCV*ORE
+C$acc end kernels
         TMP=OCV*ORE
+C$acc kernels
         DO 700 K=ILAP/2+1,NZ-ILAP/2
         DO 700 J=2,NY-IY+1
         DO 700 I=2,NX-IX+1
@@ -1925,10 +2023,12 @@ c	FT=FT-TT*OCV*WW1
                 FT(I,J,K)=FT(I,J,K)-OCV*WW1(I,J,K)*TT(I,J,K)
 710     CONTINUE
 C
+C$acc end kernels
 	ENDIF
 C
 c	FU=FU+C13*ORE*(CSHIFT(WW2,1,2)-CSHIFT(WW2,-1,2))*HY*DYYDY
 	TMP=C13*ORE
+C$acc kernels
 	DO 720 K=ILAP/2+1,NZ-ILAP/2
 	DO 720 J=2,NY-IY+1
 	DO 720 I=2,NX-IX+1
@@ -1943,16 +2043,20 @@ c       FV=FV+C13*ORE*(CSHIFT(WW1,1,2)-CSHIFT(WW1,-1,2))*HY*DYYDY
      2                                                  *HY*DYYDY(J)
 730     CONTINUE
 C
+C$acc end kernels
 	IF (.NOT.LSHR) THEN
 C
 c       WW1=(CSHIFT(UU,1,2)-CSHIFT(UU,-1,2))*HY*DYYDY
+C$acc kernels
         DO 740 K=ILAP/2+1,NZ-ILAP/2
         DO 740 J=2,NY-IY+1
         DO 740 I=2,NX-IX+1
                 WW1(I,J,K)=(UU(I,J+1,K)-UU(I,J-1,K))*HY*DYYDY(J)
 740     CONTINUE
 c       FT=FT+(WW1*WW1+2.0E00*WW1*WW2)*RO*OCV*ORE
+C$acc end kernels
         TMP=OCV*ORE
+C$acc kernels
         DO 750 K=ILAP/2+1,NZ-ILAP/2
         DO 750 J=2,NY-IY+1
         DO 750 I=2,NX-IX+1
@@ -1967,7 +2071,9 @@ c       WW2=(CSHIFT(VV,1,2)-CSHIFT(VV,-1,2))*HY*DYYDY
                 WW2(I,J,K)=(VV(I,J+1,K)-VV(I,J-1,K))*HY*DYYDY(J)
 755     CONTINUE
 c       FT=FT+C43*WW2*WW2*RO*OCV*ORE
+C$acc end kernels
         TMP=C43*OCV*ORE
+C$acc kernels
         DO 760 K=ILAP/2+1,NZ-ILAP/2
         DO 760 J=2,NY-IY+1
         DO 760 I=2,NX-IX+1
@@ -1987,19 +2093,23 @@ c       WW1=(CSHIFT(UU,1,1)-CSHIFT(UU,-1,1))*HX*DXXDX
                 WW1(I,J,K)=(UU(I+1,J,K)-UU(I-1,J,K))*HX*DXXDX(I)
 780     CONTINUE
 C
+C$acc end kernels
 	ENDIF
 C
 c       WW3=(CSHIFT(WW,1,3)-CSHIFT(WW,-1,3))*HZ*DZZDZ
+C$acc kernels
         DO 790 K=ILAP/2+1,NZ-ILAP/2
         DO 790 J=1,NY
         DO 790 I=1,NX
                 WW3(I,J,K)=(WW(I,J,K+1)-WW(I,J,K-1))*HZ*DZZDZ(K)
 790     CONTINUE
 C
+C$acc end kernels
 	IF (.NOT.LSHR) THEN
 C
 c       FT=FT+C43*(WW3*WW3-WW1*WW3-WW1*WW2-WW2*WW3)*RO*OCV*ORE
         TMP=C43*OCV*ORE
+C$acc kernels
 	DO 820 K=ILAP/2+1,NZ-ILAP/2
         DO 820 J=2,NY-IY+1
         DO 820 I=2,NX-IX+1
@@ -2016,10 +2126,12 @@ c       FT=FT-TT*OCV*WW3
                 FT(I,J,K)=FT(I,J,K)-OCV*WW3(I,J,K)*TT(I,J,K)
 830     CONTINUE
 C
+C$acc end kernels
 	ENDIF
 C
 c       FU=FU+C13*ORE*(CSHIFT(WW3,1,1)-CSHIFT(WW3,-1,1))*HX*DXXDX
         TMP=C13*ORE
+C$acc kernels
         DO 840 K=ILAP/2+1,NZ-ILAP/2
         DO 840 J=2,NY-IY+1
         DO 840 I=2,NX-IX+1
@@ -2027,7 +2139,9 @@ c       FU=FU+C13*ORE*(CSHIFT(WW3,1,1)-CSHIFT(WW3,-1,1))*HX*DXXDX
      2                                                 *HX*DXXDX(I)
 840     CONTINUE
 c       FV=FV+C13*ORE*(CSHIFT(WW3,1,2)-CSHIFT(WW3,-1,2))*HY*DYYDY
+C$acc end kernels
         TMP=C13*ORE
+C$acc kernels
         DO 850 K=ILAP/2+1,NZ-ILAP/2
         DO 850 J=2,NY-IY+1
         DO 850 I=2,NX-IX+1
@@ -2047,16 +2161,20 @@ c       WW2=(CSHIFT(VV,1,3)-CSHIFT(VV,-1,3))*HZ*DZZDZ
                 WW2(I,J,K)=(VV(I,J,K+1)-VV(I,J,K-1))*HZ*DZZDZ(K)
 880     CONTINUE
 C
+C$acc end kernels
 	IF (.NOT.LSHR) THEN
 C
 c       WW3=(CSHIFT(WW,1,2)-CSHIFT(WW,-1,2))*HY*DYYDY
+C$acc kernels
         DO 900 K=ILAP/2+1,NZ-ILAP/2
         DO 900 J=2,NY-IY+1
         DO 900 I=2,NX-IX+1
                 WW3(I,J,K)=(WW(I,J+1,K)-WW(I,J-1,K))*HY*DYYDY(J)
 900     CONTINUE
 c       FT=FT+(WW1*WW1+WW2*WW2+2.0E00*WW2*WW3+WW3*WW3)*RO*OCV*ORE
+C$acc end kernels
         TMP=OCV*ORE
+C$acc kernels
         DO 910 K=ILAP/2+1,NZ-ILAP/2
         DO 910 J=2,NY-IY+1
         DO 910 I=2,NX-IX+1
@@ -2067,11 +2185,13 @@ c       FT=FT+(WW1*WW1+WW2*WW2+2.0E00*WW2*WW3+WW3*WW3)*RO*OCV*ORE
      5                                              *RO(I,J,K)*TMP
 910     CONTINUE
 C
+C$acc end kernels
 	ENDIF
 C
 c       FW=FW+C13*ORE*((CSHIFT(WW1,1,1)-CSHIFT(WW1,-1,1))*HX*DXXDX
 c	     +(CSHIFT(WW2,1,2)-CSHIFT(WW2,-1,2))*HY*DYYDY)
 	TMP=C13*ORE
+C$acc kernels
         DO 920 K=ILAP/2+1,NZ-ILAP/2
         DO 920 J=2,NY-IY+1
         DO 920 I=2,NX-IX+1
@@ -2081,16 +2201,20 @@ c	     +(CSHIFT(WW2,1,2)-CSHIFT(WW2,-1,2))*HY*DYYDY)
      4                                                  *HY*DYYDY(J))
 920     CONTINUE
 C
+C$acc end kernels
 	IF (.NOT.LSHR) THEN
 C
 c       WW3=(CSHIFT(WW,1,1)-CSHIFT(WW,-1,1))*HX*DXXDX
+C$acc kernels
         DO 930 K=ILAP/2+1,NZ-ILAP/2
         DO 930 J=2,NY-IY+1
         DO 930 I=2,NX-IX+1
                 WW3(I,J,K)=(WW(I+1,J,K)-WW(I-1,J,K))*HX*DXXDX(I)
 930     CONTINUE
 c       FT=FT+2.0E00*WW1*WW3*RO*OCV*ORE
+C$acc end kernels
         TMP=OCV*ORE
+C$acc kernels
         DO 940 K=ILAP/2+1,NZ-ILAP/2
         DO 940 J=2,NY-IY+1
         DO 940 I=2,NX-IX+1
@@ -2098,6 +2222,7 @@ c       FT=FT+2.0E00*WW1*WW3*RO*OCV*ORE
      2                                            *RO(I,J,K)*TMP
 940     CONTINUE
 C
+C$acc end kernels
 	ENDIF
 C
 C----------------------------------------------------------------------
@@ -2105,6 +2230,7 @@ C  Add rotation terms.
 C----------------------------------------------------------------------
 	IF (LROT) THEN
 c		FU=FU+RV*OMZ
+C$acc kernels
         	DO 950 K=ILAP/2+1,NZ-ILAP/2
         	DO 950 J=2,NY-IY+1
         	DO 950 I=2,NX-IX+1
@@ -2122,12 +2248,14 @@ c        	FW=FW-RV*OMX
         	DO 970 I=2,NX-IX+1
                 	FW(I,J,K)=FW(I,J,K)-OMX*RV(I,J,K)
 970     	CONTINUE
+C$acc end kernels
 	ENDIF
 C----------------------------------------------------------------------
 C  Magnetic fields ...
 C----------------------------------------------------------------------
 	IF (LMAG) THEN
 c       	RU=(CSHIFT(UU,1,1)-CSHIFT(UU,-1,1))*HX*DXXDX
+C$acc kernels
         	DO 1000 K=ILAP/2+1,NZ-ILAP/2
         	DO 1000 J=2,NY-IY+1
         	DO 1000 I=2,NX-IX+1
@@ -2209,22 +2337,28 @@ c               RW=(CSHIFT(WW,1,3)-CSHIFT(WW,-1,3))*HZ*DZZDZ
                 DO 1120 I=2,NX-IX+1
                         RW(I,J,K)=(WW(I,J,K+1)-WW(I,J,K-1))*HZ*DZZDZ(K)
 1120            CONTINUE
+C$acc end kernels
 		IF (MYPEZ.EQ.0) THEN
+C$acc kernels
                     DO 1125 J=2,NY-IY+1
                     DO 1125 I=2,NX-IX+1
                        	RW(I,J,ILAP/2+1)=
      2			     (4.0E00*WW(I,J,ILAP/2+2)-WW(I,J,ILAP/2+3))
      3                        			    *HZ*DZZDZ(ILAP/2+1)
 1125                CONTINUE
+C$acc end kernels
         	ELSE IF (MYPEZ.EQ.NPEZ-1) THEN
+C$acc kernels
                     DO 1126 J=2,NY-IY+1
                     DO 1126 I=2,NX-IX+1
                         RW(I,J,NZ-ILAP/2)=
      2			(WW(I,J,NZ-ILAP/2-2)-4.0E00*WW(I,J,NZ-ILAP/2-1))
      3                                              *HZ*DZZDZ(NZ-ILAP/2)
 1126                CONTINUE
+C$acc end kernels
         	ENDIF
 c               WW1=WW1+BZ*RU-BX*RW
+C$acc kernels
                 DO 1130 K=ILAP/2+1,NZ-ILAP/2
                 DO 1130 J=2,NY-IY+1
                 DO 1130 I=2,NX-IX+1
@@ -2288,7 +2422,9 @@ c               FW=FW+OBETA*BX*RW
                         FW(I,J,K)=FW(I,J,K)+OBETA*BX(I,J,K)*RW(I,J,K)
 1210             CONTINUE
 c       	FT=FT+OBETA*ORM*RO*OCV*(TT*TT+RV*RV+RW*RW-2.0E00*RV*TT)
+C$acc end kernels
         	TMP=OBETA*ORM*OCV
+C$acc kernels
         	DO 1220 K=ILAP/2+1,NZ-ILAP/2
         	DO 1220 J=2,NY-IY+1
         	DO 1220 I=2,NX-IX+1
@@ -2417,7 +2553,9 @@ c               FW=FW-OBETA*BX*RU
                         FW(I,J,K)=FW(I,J,K)-OBETA*BX(I,J,K)*RU(I,J,K)
 1350             CONTINUE
 c               FT=FT+OBETA*ORM*RO*OCV*(RU*RU-2.0E00*RU*RW)
+C$acc end kernels
                 TMP=OBETA*ORM*OCV
+C$acc kernels
                 DO 1360 K=ILAP/2+1,NZ-ILAP/2
                 DO 1360 J=2,NY-IY+1
                 DO 1360 I=2,NX-IX+1
@@ -2448,7 +2586,9 @@ c     3                                                *H2Z*DZZDZ*DZZDZ
      3                     +(BX(I,J,K+1)-2.0E00*BX(I,J,K)+BX(I,J,K-1))
      4                                          *H2Z*DZZDZ(K)*DZZDZ(K)
 1390            CONTINUE
+C$acc end kernels
 		IF (MYPEZ.EQ.0) THEN
+C$acc kernels
                     DO 1391 J=2,NY-IY+1
                     DO 1391 I=2,NX-IX+1
                         RU(I,J,ILAP/2+1)=(-3.0E00*BX(I,J,ILAP/2+1)
@@ -2458,7 +2598,9 @@ c     3                                                *H2Z*DZZDZ*DZZDZ
      5			 +4.0E00*BX(I,J,ILAP/2+3)-BX(I,J,ILAP/2+4))
      6			       *H2Z*DZZDZ(ILAP/2+1)*DZZDZ(ILAP/2+1)
 1391                CONTINUE
+C$acc end kernels
                 ELSE IF (MYPEZ.EQ.NPEZ-1) THEN
+C$acc kernels
                     DO 1392 J=2,NY-IY+1
                     DO 1392 I=2,NX-IX+1
                         RU(I,J,NZ-ILAP/2)=(3.0E00*BX(I,J,NZ-ILAP/2)
@@ -2468,10 +2610,12 @@ c     3                                                *H2Z*DZZDZ*DZZDZ
      5		    +4.0E00*BX(I,J,NZ-ILAP/2-2)-BX(I,J,NZ-ILAP/2-3))
      6			      *H2Z*DZZDZ(NZ-ILAP/2)*DZZDZ(NZ-ILAP/2)
 1392                CONTINUE
+C$acc end kernels
                 ENDIF
 c               RV=RV*(1.0E00/DYYDY)*D2YYDY2
 c     2                 +(CSHIFT(BY,1,2)-2.0E00*BY+CSHIFT(BY,-1,2))
 c     3                                                *H2Y*DYYDY*DYYDY
+C$acc kernels
                 DO 1400 K=ILAP/2+1,NZ-ILAP/2
                 DO 1400 J=2,NY-IY+1
                 DO 1400 I=2,NX-IX+1
@@ -2525,7 +2669,9 @@ c               FW=FW-OBETA*BY*RU
                         FW(I,J,K)=FW(I,J,K)-OBETA*BY(I,J,K)*RU(I,J,K)
 1470            CONTINUE
 c               FT=FT+OBETA*ORM*RO*OCV*(RV*RV+RW*RW-2.0E00*RV*RW)
+C$acc end kernels
                 TMP=OBETA*ORM*OCV
+C$acc kernels
                 DO 1480 K=ILAP/2+1,NZ-ILAP/2
                 DO 1480 J=2,NY-IY+1
                 DO 1480 I=2,NX-IX+1
@@ -2557,7 +2703,9 @@ c     3                                                *H2Z*DZZDZ*DZZDZ
      3                     +(BY(I,J,K+1)-2.0E00*BY(I,J,K)+BY(I,J,K-1))
      4                                          *H2Z*DZZDZ(K)*DZZDZ(K)
 1510            CONTINUE
+C$acc end kernels
 		IF (MYPEZ.EQ.0) THEN
+C$acc kernels
                     DO 1511 J=2,NY-IY+1
                     DO 1511 I=2,NX-IX+1
                         RV(I,J,ILAP/2+1)=(-3.0E00*BY(I,J,ILAP/2+1)
@@ -2567,7 +2715,9 @@ c     3                                                *H2Z*DZZDZ*DZZDZ
      5                   +4.0E00*BY(I,J,ILAP/2+3)-BY(I,J,ILAP/2+4))
      6                         *H2Z*DZZDZ(ILAP/2+1)*DZZDZ(ILAP/2+1)
 1511                CONTINUE
+C$acc end kernels
                 ELSE IF (MYPEZ.EQ.NPEZ-1) THEN
+C$acc kernels
                     DO 1513 J=2,NY-IY+1
                     DO 1513 I=2,NX-IX+1
                         RV(I,J,NZ-ILAP/2)=(3.0E00*BY(I,J,NZ-ILAP/2)
@@ -2577,10 +2727,12 @@ c     3                                                *H2Z*DZZDZ*DZZDZ
      5              +4.0E00*BY(I,J,NZ-ILAP/2-2)-BY(I,J,NZ-ILAP/2-3))
      6                        *H2Z*DZZDZ(NZ-ILAP/2)*DZZDZ(NZ-ILAP/2)
 1513                CONTINUE
+C$acc end kernels
                 ENDIF
 c               RW=RW*(1.0E00/DYYDY)*D2YYDY2
 c     2                 +(CSHIFT(BZ,1,2)-2.0E00*BZ+CSHIFT(BZ,-1,2))
 c     3                                                *H2Y*DYYDY*DYYDY
+C$acc kernels
                 DO 1520 K=ILAP/2+1,NZ-ILAP/2
                 DO 1520 J=2,NY-IY+1
                 DO 1520 I=2,NX-IX+1
@@ -2631,6 +2783,7 @@ c               WW3=WW3+ORM*RW
                 DO 1580 I=2,NX-IX+1
                         WW3(I,J,K)=WW3(I,J,K)+ORM*RW(I,J,K)
 1580             CONTINUE
+C$acc end kernels
 	ENDIF
 C
 	RETURN
@@ -2760,14 +2913,17 @@ C----------------------------------------------------------------------
 	IF (MYPEZ.EQ.0) THEN
 C
 		IF (LSHR) THEN
+C$acc kernels
 			DO 10 J=2,NY-IY+1
                         DO 10 I=2,NX-IX+1
                                 RU(I,J,ILAP/2+1)=0.0E00
 				RV(I,J,ILAP/2+1)=RRT*COS(RPP*TIMT)
      2						    *RO(I,J,ILAP/2+1)
 10			CONTINUE
+C$acc end kernels
 		ELSE
 C
+C$acc kernels
 		DO 20 J=2,NY-IY+1
 		DO 20 I=2,NX-IX+1
 			RU(I,J,ILAP/2+1)=RO(I,J,ILAP/2+1)
@@ -2781,12 +2937,15 @@ C
      3		        	-C13*RV(I,J,ILAP/2+3)/RO(I,J,ILAP/2+3))
 30		CONTINUE
 C
+C$acc end kernels
 		ENDIF
 C
+C$acc kernels
 		DO 40 J=2,NY-IY+1
 		DO 40 I=2,NX-IX+1
 			RW(I,J,ILAP/2+1)=0.0E00
 40		CONTINUE
+C$acc end kernels
                 IF ((TP.NE.0.0E00).AND.((ITC.EQ.0).OR.(ITC.EQ.1))) THEN
 C----------------------------------------------------------------------
 C  Temperature or flux peturbation held on upper boundary.
@@ -2802,19 +2961,23 @@ C  Gaussian temperature profile with full width at half maximum
 C  equal to HH and minimum equal to TP.
 C----------------------------------------------------------------------
 			CLN=-4.0E00*LOG(2.0E00)/HH/HH
+C$acc kernels
 			DO 50 J=2,NY-IY+1
 			DO 50 I=2,NX-IX+1
 				TT(I,J,ILAP/2+1)=1.0E00-(1.0E00-TPR)
      2					   *EXP(CLN*(EXX(I)-XP)**2)/HH
      3					   *EXP(CLN*(WYY(J)-YP)**2)/HH
 50			CONTINUE
+C$acc end kernels
 		    ELSE
 C----------------------------------------------------------------------
 C  Gaussian flux profile with full width at half maximum equal to 1.0
 C  and maximum equal to TP.
 C----------------------------------------------------------------------
 			CLN=-4.0E00*LOG(2.0E00)/HH/HH
+C$acc update self(dzzdz)
                 	DZ=1.0E00/FLOAT(NPZ-1)/DZZDZ(ILAP/2+1)
+C$acc kernels
 			DO 60 J=2,NY-IY+1
 			DO 60 I=2,NX-IX+1
                 		TT(I,J,ILAP/2+1)=C43*TT(I,J,ILAP/2+2)
@@ -2823,6 +2986,7 @@ C----------------------------------------------------------------------
      4                                	    *EXP(CLN*(EXX(I)-XP)**2)/HH
      5                                	    *EXP(CLN*(WYY(J)-YP)**2)/HH)
 60			CONTINUE
+C$acc end kernels
         	    ENDIF  
 		ELSE
                     IF ((ITC.EQ.0).OR.(ITC.EQ.2).OR.(ITC.EQ.4)) THEN
@@ -2830,6 +2994,7 @@ C----------------------------------------------------------------------
 C  Constant temperature upper boundary, no plume perturbation. Embedded 
 C  heat loss plume hard wired for constant temp upper boundary codition.
 C----------------------------------------------------------------------
+C$acc kernels
 			DO 61 J=2,NY-IY+1
                     	DO 61 I=2,NX-IX+1
 				IF (LREM) THEN
@@ -2848,12 +3013,15 @@ C----------------------------------------------------------------------
 C----------------------------------------------------------------------
 				ENDIF
 61		    	CONTINUE
-		    ENDIF 
+C$acc end kernels
+		    ENDIF
 		    IF (ITC.EQ.1) THEN
 C----------------------------------------------------------------------
 C  Constant flux upper boundary, no plume perturbation.
 C----------------------------------------------------------------------
+C$acc update self(dzzdz)
 			DZ=1.0E00/FLOAT(NPZ-1)/DZZDZ(ILAP/2+1)
+C$acc kernels
 			DO 62 J=2,NY-IY+1
                         DO 62 I=2,NX-IX+1
 		    	IF (LREM) THEN
@@ -2866,14 +3034,17 @@ C----------------------------------------------------------------------
      3					    -C23*DZ*THETA
 			ENDIF
 62                      CONTINUE
+C$acc end kernels
 	       	    ENDIF
 		ENDIF
 		IF (LMAG) THEN
 			IF (IBC.EQ.0) THEN
+C$acc kernels
 				DO 65 J=2,NY-IY+1
 				DO 65 I=2,NX-IX+1
 					BZ(I,J,ILAP/2+1)=0.0E00
 65				CONTINUE
+C$acc end kernels
 			ENDIF
 		ENDIF
         ENDIF
@@ -2883,14 +3054,17 @@ C----------------------------------------------------------------------
 	IF (MYPEZ.EQ.NPEZ-1) THEN
 C
 		IF (LSHR) THEN
+C$acc kernels
                         DO 69 J=2,NY-IY+1
                         DO 69 I=2,NX-IX+1
                                 RU(I,J,NZ-ILAP/2)=0.0E00
                                 RV(I,J,NZ-ILAP/2)=RRB*COS(RPP*TIMT)
      2						     *RO(I,J,NZ-ILAP/2)
 69                      CONTINUE
+C$acc end kernels
         	ELSE
 C
+C$acc kernels
 		DO 70 J=2,NY-IY+1
 		DO 70 I=2,NX-IX+1
     			RU(I,J,NZ-ILAP/2)=RO(I,J,NZ-ILAP/2)
@@ -2908,25 +3082,32 @@ C
      4		  	      		/RO(I,J,NZ-ILAP/2-2))
 80		CONTINUE
 C
+C$acc end kernels
 		ENDIF
 C
+C$acc kernels
 		DO 90 J=2,NY-IY+1
 		DO 90 I=2,NX-IX+1
 			RW(I,J,NZ-ILAP/2)=0.0E00
 90		CONTINUE
+C$acc end kernels
 		IF (IZC.EQ.0) THEN
 C----------------------------------------------------------------------
 C  Constant temperature lower boundary.
 C----------------------------------------------------------------------
+C$acc kernels
 			DO 100 J=2,NY-IY+1
 			DO 100 I=2,NX-IX+1
 				TT(I,J,NZ-ILAP/2)=TB
 100			CONTINUE
+C$acc end kernels
 		ELSE IF (IZC.EQ.1) THEN
 C----------------------------------------------------------------------
 C  Constant flux lower boundary.
 C----------------------------------------------------------------------
+C$acc update self(dzzdz)
                         DZ=1.0E00/FLOAT(NPZ-1)/DZZDZ(NZ-ILAP/2)
+C$acc kernels
                         DO 105 J=2,NY-IY+1
                         DO 105 I=2,NX-IX+1
 			IF (LREM) THEN
@@ -2939,6 +3120,7 @@ C----------------------------------------------------------------------
      3                                   +C23*DZ*THETA/RKAPA(NZ-ILAP/2)
 			ENDIF
 105			CONTINUE
+C$acc end kernels
 		ELSE
 			WRITE(6,*)'BCON:  Invalid IZCON'
 			CALL MPI_FINALIZE(IERR)
@@ -2946,10 +3128,12 @@ C----------------------------------------------------------------------
 		ENDIF
 		IF (LMAG) THEN
 			IF (IBC.EQ.0) THEN
+C$acc kernels
 				DO 110 J=2,NY-IY+1
 				DO 110 I=2,NX-IX+1
 					BZ(I,J,NZ-ILAP/2)=0.0E00
 110				CONTINUE
+C$acc end kernels
 			ENDIF
 		ENDIF
 	ENDIF
@@ -3045,32 +3229,40 @@ C----------------------------------------------------------------------
         IF(NPEZ.GT.1) THEN
            ITAG = 100
            IF (MYPEZ.EQ.0) THEN
+C$acc update self(VAR(:,:,NZ-ILAP+1:NZ-ILAP+ILAP/2))
               CALL MPI_SEND(VAR(1,1,NZ-ILAP+1),NX*NY*(ILAP/2),MPISIZE,
      2                     MYPE+NPEY,ITAG,MPI_COMM_WORLD,IERR)
            ELSE IF (MYPEZ.EQ.NPEZ-1) THEN
               CALL MPI_RECV(VAR(1,1,1),NX*NY*(ILAP/2),MPISIZE,MYPE-NPEY,
      2                     ITAG,MPI_COMM_WORLD,ISTATUS,IERR)
+C$acc update device(VAR(:,:,:ILAP/2))
            ELSE
 C              print*, "pt 2 mype, npey", mype, npey
+C$acc update self(VAR(:,:,NZ-ILAP+1:NZ-ILAP+ILAP/2))
               CALL MPI_SENDRECV(VAR(1,1,NZ-ILAP+1),NX*NY*(ILAP/2),
      2                    MPISIZE,MYPE+NPEY,ITAG,VAR(1,1,1),
      3                    NX*NY*(ILAP/2),MPISIZE,MYPE-NPEY,ITAG,
      4                    MPI_COMM_WORLD,ISTATUS,IERR)
+C$acc update device(VAR(:,:,:ILAP/2))
            ENDIF
 C
            ITAG = 200
            IF (MYPEZ.EQ.0) THEN
               CALL MPI_RECV(VAR(1,1,NZ-ILAP/2+1),NX*NY*(ILAP/2),MPISIZE,
      2                    MYPE+NPEY,ITAG,MPI_COMM_WORLD,ISTATUS,IERR)
+C$acc update device(VAR(:,:,NZ-ILAP/2+1:NZ))
            ELSE IF (MYPEZ.EQ.NPEZ-1) THEN
+C$acc update self(VAR(:,:,ILAP/2+1:ILAP/2+ILAP/2))
               CALL MPI_SEND(VAR(1,1,ILAP/2+1),NX*NY*(ILAP/2),MPISIZE,
      2                    MYPE-NPEY,ITAG,MPI_COMM_WORLD,IERR)
            ELSE
 C                print*, "pt 3 mype, npey", mype, npey
+C$acc update self(VAR(:,:,ILAP/2+1:ILAP/2+ILAP/2))
               CALL MPI_SENDRECV(VAR(1,1,ILAP/2+1),NX*NY*(ILAP/2),
      2                    MPISIZE,MYPE-NPEY,ITAG,VAR(1,1,NZ-ILAP/2+1),
      3                    NX*NY*(ILAP/2),MPISIZE,MYPE+NPEY,ITAG,
      4                    MPI_COMM_WORLD,ISTATUS,IERR)
+C$acc update device(VAR(:,:,NZ-ILAP/2+1:NZ))
            ENDIF
         ENDIF
 C----------------------------------------------------------------------
@@ -3079,64 +3271,80 @@ C----------------------------------------------------------------------
         IF(NPEY.GT.1) THEN
            ITAG = 300
            IF (MYPEY.EQ.0) THEN
+C$acc update self(VAR(:,NY-IY+1:NY-IY/2,:))
               CALL MPI_SEND(VAR(:,NY-IY+1:NY-IY/2,:),NX*NZ*(IY/2),
      2                    MPISIZE,MYPE+1,ITAG,MPI_COMM_WORLD,IERR)
            ELSE IF (MYPEY.EQ.NPEY-1) THEN
               CALL MPI_RECV(VAR(:,1:IY/2,:),NX*NZ*(IY/2),MPISIZE,
      2                    MYPE-1,ITAG,MPI_COMM_WORLD,ISTATUS,IERR)
+C$acc update device(VAR(:,1:IY/2,:))
            ELSE
 C                print*, "pt 4 mype, npey", mype, npey
+C$acc update self(VAR(:,NY-IY+1:NY-IY/2,:))
               CALL MPI_SENDRECV(VAR(:,NY-IY+1:NY-IY/2,:),NX*NZ*(IY/2),
      2                    MPISIZE,MYPE+1,ITAG,VAR(:,1:IY/2,:),
      3                    NX*NZ*(IY/2),MPISIZE,MYPE-1,ITAG,
      4                    MPI_COMM_WORLD,ISTATUS,IERR)
+C$acc update device(VAR(:,1:IY/2,:))
            ENDIF
 C
            ITAG = 400
            IF (MYPEY.EQ.0) THEN
               CALL MPI_RECV(VAR(:,NY-IY/2+1:NY,:),NX*NZ*(IY/2),MPISIZE,
      2                    MYPE+1,ITAG,MPI_COMM_WORLD,ISTATUS,IERR)
+C$acc update device(VAR(:,NY-IY/2+1:NY,:))
            ELSE IF (MYPEY.EQ.NPEY-1) THEN
+C$acc update self(VAR(:,IY/2+1:IY,:))
               CALL MPI_SEND(VAR(:,IY/2+1:IY,:),NX*NZ*(IY/2),MPISIZE,
      2                    MYPE-1,ITAG,MPI_COMM_WORLD,IERR)
            ELSE
 C                print*, "pt 5 mype, npey", mype, npey
+C$acc update self(VAR(:,IY/2+1:IY,:))
               CALL MPI_SENDRECV(VAR(:,IY/2+1:IY,:),NX*NZ*(IY/2),
      2                    MPISIZE,MYPE-1,ITAG,VAR(:,NY-IY/2+1:NY,:),
      3                    NX*NZ*(IY/2),MPISIZE,MYPE+1,ITAG,
      4                    MPI_COMM_WORLD,ISTATUS,IERR)
+C$acc update device(VAR(:,NY-IY/2+1:NY,:))
            ENDIF
 C----------------------------------------------------------------------
 C  Communication for periodicity in y-direction.
 C----------------------------------------------------------------------
            ITAG = 500
            IF (MYPEY.EQ.0) THEN
+C$acc update self(VAR(:,IY/2+1:IY,:))
               CALL MPI_SEND(VAR(:,IY/2+1:IY,:),NX*NZ*(IY/2),MPISIZE,
      2                     MYPE+NPEY-1,ITAG,MPI_COMM_WORLD,IERR)
            ELSE IF (MYPEY.EQ.NPEY-1) THEN
               CALL MPI_RECV(VAR(:,NY-IY/2+1:NY,:),NX*NZ*(IY/2),
      2        MPISIZE,MYPE-NPEY+1,ITAG,MPI_COMM_WORLD,ISTATUS,IERR)
+C$acc update device(VAR(:,NY-IY/2+1:NY,:))
            ENDIF
 C
            ITAG = 600
            IF (MYPEY.EQ.0) THEN
               CALL MPI_RECV(VAR(:,1:IY/2,:),NX*NZ*(IY/2),MPISIZE,
      2                MYPE+NPEY-1,ITAG,MPI_COMM_WORLD,ISTATUS,IERR)
+C$acc update device(VAR(:,1:IY/2,:))
            ELSE IF (MYPEY.EQ.NPEY-1) THEN
+C$acc update self(VAR(:,NY-IY+1:NY-IY/2,:))
               CALL MPI_SEND(VAR(:,NY-IY+1:NY-IY/2,:),NX*NZ*(IY/2),
      2              MPISIZE,MYPE-NPEY+1,ITAG,MPI_COMM_WORLD,IERR)
            ENDIF
 
         ELSE
+C$acc kernels
            VAR(:,1:IY/2,:)       = VAR(:,NY-IY+1:NY-IY/2,:)
            VAR(:,NY-IY/2+1:NY,:) = VAR(:,IY/2+1:IY,:)
+C$acc end kernels
         ENDIF
 C----------------------------------------------------------------------
 C  Periodicity in x-direction.
 C----------------------------------------------------------------------
+C$acc kernels
 	VAR(1:IX/2,:,:)       = VAR(NX-IX+1:NX-IX/2,:,:)
         VAR(NX-IX/2+1:NX,:,:) = VAR(IX/2+1:IX,:,:)
 C
+C$acc end kernels
         RETURN
         END
 C**********************************************************************
@@ -3157,7 +3365,9 @@ C
         COMMON/BOUNDS/XMAX,YMAX,ZMAX
         COMMON/COMMUN/MYPE,MYPEY,MYPEZ,MPISIZE
 C
+C$acc data create(wwz)
         IF(NGRID.EQ.0) THEN
+C$acc kernels
            DO K=1,NZ
               WWZ(K)=0.0
               DO J=IY/2+1,NY-IY/2
@@ -3167,6 +3377,7 @@ C
               END DO
               WWZ(K)=WWZ(K)/(FLOAT(NPX*NPY))
            END DO
+C$acc end kernels
         ELSE
            WRITE(*,*) 'Update spline interpolation'
            CALL MPI_FINALIZE(IERR)
@@ -3192,10 +3403,12 @@ C----------------------------------------------------------------
         ENDIF
 C
         IF(NPEY.EQ.1) THEN
+C$acc update self(wwz)
            VARM=WWZ
         ELSE
            ITAG=100
            IF(MYPEY.EQ.0) THEN
+C$acc update self(wwz)
               VARM=WWZ
               DO IPE=1,NPEY-1
                  CALL MPI_RECV(WWZ,NZ,MPISIZE,MYPE+IPE,
@@ -3220,6 +3433,7 @@ C
         ENDIF
 C
         RETURN
+C$acc end data
         END
 C**********************************************************************
         SUBROUTINE BSSTEP (Y,DYDX,NV,X,HTRY,EPS,HDID,HNEXT)
